@@ -1,10 +1,8 @@
-from ctypes import alignment
-
 from color_picker import ColorPicker
 from pygments.styles import get_all_styles, get_style_by_name
 from pygments.token import Token
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QFontDatabase, QPalette
 from PyQt5.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -12,14 +10,13 @@ from PyQt5.QtWidgets import (
     QLabel,
     QScrollArea,
     QSizePolicy,
-    QSplitter,
-    QToolBar,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
 
 
-class StyleToolBar(QScrollArea):
+class StyleSettings(QScrollArea):
     """Виджет настроек стилей"""
 
     # Сигнал об изменении стиля
@@ -33,43 +30,28 @@ class StyleToolBar(QScrollArea):
             QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding
         )
 
-        # self.setStyleSheet("""
-        #     QToolBar {
-        #         padding-left: 10px;    /* Отступ слева */
-        #         padding-top: 10px;      /* Отступ сверху */
-        #         padding-bottom: 5px;   /* Отступ снизу */
-        #         spacing: 10px;         /* Расстояние между элементами */
-        #     }
-        #     QToolBar::separator {
-        #         height: 3px;
-        #         background: qlineargradient(
-        #             x1:0, y1:0, x2:1, y2:0,
-        #             stop:0 transparent,
-        #             stop:0.4 #666666,
-        #             stop:0.6 #666666,
-        #             stop:1 transparent
-        #         );
-        #         margin: 10px 5px;
-        #     }
-        # """)
-
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         container = QWidget()
-        self.container_layout = QVBoxLayout(container)
+        self.main_layout = QVBoxLayout(container)
 
-        self.style_combo = QComboBox()
-        self.load_styles()
-        self.style_combo.currentTextChanged.connect(self.change_style)
-        self.add_header_block("Стили")
-        self.container_layout.addWidget(self.style_combo)
+        self.add_header_block("Стиль")
+        self.add_style_combo()
+        self.add_separator()
+        self.add_header_block("Шрифт")
+        self.add_font_combo()
+        self.font_size = QSpinBox()
+        self.font_size.setRange(8, 50)
+        self.font_size.setValue(12)
+        self.font_size.valueChanged.connect(self.update_style)
+        self.main_layout.addWidget(self.font_size)
         self.add_separator()
 
         # Общие
         self.add_header_block("Общие настройки")
         self.bg_color = ColorPicker("Фон:")
         self.bg_color.color_changed.connect(self.update_style)
-        self.container_layout.addWidget(
+        self.main_layout.addWidget(
             self.bg_color, alignment=Qt.AlignmentFlag.AlignHCenter
         )
 
@@ -86,8 +68,7 @@ class StyleToolBar(QScrollArea):
         self.punctuations = self.add_setting_block("Пунктуация")
         self.comments = self.add_setting_block("Комментарии")
 
-        self.change_style("monokai")
-
+        self.change_style(self.style_combo.currentText())
         self.setWidget(container)
 
     def change_style(self, style_name):
@@ -95,7 +76,7 @@ class StyleToolBar(QScrollArea):
         self.update_enabled = False
         found_style = get_style_by_name(style_name)
         style = {"background": found_style.background_color, "tokens": {}}
-        for token_type, style_data in get_style_by_name(style_name):
+        for token_type, style_data in found_style:
             style["tokens"][token_type] = style_data
 
         self.set_style(style)
@@ -110,6 +91,10 @@ class StyleToolBar(QScrollArea):
         """Возвращает текущий стиль"""
         return {
             "background": self.bg_color.get_color(),
+            "font": {
+                "family": self.font_combo.currentText(),
+                "size": self.font_size.value(),
+            },
             "tokens": {
                 # Комментарии
                 Token.Comment: {
@@ -226,17 +211,52 @@ class StyleToolBar(QScrollArea):
         block["italic"].setChecked(style["tokens"][token]["italic"])
         block["bold"].setChecked(style["tokens"][token]["bold"])
 
-    def load_styles(self):
-        """Загружает доступные стили Pygments"""
-        styles = list(get_all_styles())
-        self.style_combo.addItems(sorted(styles))
+    def add_style_combo(self):
+        """Добавляет комбобокс с доступными стилями"""
+        self.style_combo = QComboBox()
+        styles = set(get_all_styles())
+        selected_styles = (
+            "dracula",
+            "one-dark",
+            "monokai",
+            "native",
+            "nord",
+            "vim",
+            "coffee",
+            "fruity",
+            "material",
+        )
 
-        # Устанавливаем популярные стили наверх
-        popular_styles = ["monokai", "vim", "friendly", "colorful", "autumn"]
-        for style in popular_styles:
+        for style in selected_styles:
             if style in styles:
-                self.style_combo.insertItem(0, style)
-                self.style_combo.setCurrentIndex(0)
+                self.style_combo.addItem(style)
+
+        self.style_combo.currentTextChanged.connect(self.change_style)
+        self.main_layout.addWidget(self.style_combo)
+
+    def add_font_combo(self):
+        """Добавляет комбобокс с доступными шрифтами"""
+        self.font_combo = QComboBox()
+        fonts = set(QFontDatabase().families())
+        selected_fonts = (
+            "monospace",
+            "Cascadia Code",
+            "Cascadia Mono",
+            "Consolas",
+            "Lucida Console",
+            "Courier New",
+            "DejaVu Sans Mono",
+            "Liberation Mono",
+            "Noto Mono",
+            "FreeMono",
+        )
+
+        for font in selected_fonts:
+            if font in fonts:
+                self.font_combo.addItem(font)
+
+        self.font_combo.currentTextChanged.connect(self.update_style)
+        self.main_layout.addWidget(self.font_combo)
 
     def add_separator(self):
         """Добавляет разделительную линию"""
@@ -245,7 +265,7 @@ class StyleToolBar(QScrollArea):
         separator.setFrameShadow(QFrame.Shadow.Sunken)
         separator.setLineWidth(1)
         separator.setPalette(QPalette(QColor("#666666")))
-        self.container_layout.addWidget(separator)
+        self.main_layout.addWidget(separator)
 
     def add_setting_block(self, name: str):
         """Добавляет блок настроек"""
@@ -259,13 +279,13 @@ class StyleToolBar(QScrollArea):
         block["color"].color_changed.connect(self.update_style)
         block["italic"].stateChanged.connect(self.update_style)
         block["bold"].stateChanged.connect(self.update_style)
-        self.container_layout.addWidget(
+        self.main_layout.addWidget(
             block["color"], alignment=Qt.AlignmentFlag.AlignHCenter
         )
-        self.container_layout.addWidget(
+        self.main_layout.addWidget(
             block["italic"], alignment=Qt.AlignmentFlag.AlignHCenter
         )
-        self.container_layout.addWidget(
+        self.main_layout.addWidget(
             block["bold"], alignment=Qt.AlignmentFlag.AlignHCenter
         )
 
@@ -278,4 +298,4 @@ class StyleToolBar(QScrollArea):
         font.setBold(True)
         label.setFont(font)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.container_layout.addWidget(label)
+        self.main_layout.addWidget(label)

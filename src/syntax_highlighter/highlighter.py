@@ -1,14 +1,10 @@
 from pygments.lexers import get_lexer_by_name
-from pygments.styles import get_style_by_name
 from PyQt5.QtGui import QColor, QFont, QSyntaxHighlighter, QTextCharFormat
 
 
 class Highlighter(QSyntaxHighlighter):
     def __init__(self, parent=None):
         super().__init__(parent)
-        document = self.document()
-        if document is not None:
-            document.setDefaultFont(QFont("Consolas", 10))
 
         # Массив для стилей форматирования
         self.format_styles = {}

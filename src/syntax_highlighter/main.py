@@ -7,18 +7,15 @@ from pygments.lexers import get_lexer_by_name
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import (
-    QAction,
     QApplication,
     QFileDialog,
     QHBoxLayout,
-    QLabel,
     QMainWindow,
     QMessageBox,
     QPushButton,
-    QStatusBar,
     QWidget,
 )
-from style import StyleToolBar
+from style import StyleSettings
 
 
 class MainWindow(QMainWindow):
@@ -38,7 +35,7 @@ class MainWindow(QMainWindow):
         main_layout = QHBoxLayout(central_widget)
 
         # Панель инструментов
-        self.toolbar = StyleToolBar()
+        self.toolbar = StyleSettings()
         self.toolbar.style_changed.connect(self.update_style)
         main_layout.addWidget(self.toolbar)
 
@@ -46,7 +43,7 @@ class MainWindow(QMainWindow):
         export_btn = QPushButton("Экспорт в HTML", self)
         export_btn.clicked.connect(self.export_to_html)
         self.toolbar.add_separator()
-        self.toolbar.container_layout.addWidget(export_btn)
+        self.toolbar.main_layout.addWidget(export_btn)
 
         # Редактор
         self.editor = CodeEditor()
@@ -109,6 +106,9 @@ if __name__ == "__main__":
     dark_palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
     dark_palette.setColor(QPalette.HighlightedText, QColor(0, 0, 0))
     app.setPalette(dark_palette)
+
+    # Устанавливаем шрифт
+    app.setFont(QFont("Arial", 10))
 
     window = MainWindow()
     window.show()

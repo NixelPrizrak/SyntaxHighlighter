@@ -1,18 +1,11 @@
 from highlighter import Highlighter
-from PyQt5.QtCore import *
-from PyQt5.QtGui import QColor, QFont, QFontMetrics, QPalette
-from PyQt5.QtWidgets import QApplication, QTextEdit
+from PyQt5.QtGui import QColor, QFont, QPalette
+from PyQt5.QtWidgets import QTextEdit
 
 
 class CodeEditor(QTextEdit):
     def __init__(self):
         super().__init__()
-
-        font = QFont("Consolas", 10)
-        self.setFont(font)
-
-        # Настраиваем табуляцию
-        self.setTabStopDistance(QFontMetrics(font).horizontalAdvance(" ") * 4)
 
         # Подсветчик
         self.highlighter = Highlighter(self.document())
@@ -24,6 +17,10 @@ class CodeEditor(QTextEdit):
         """Устанавливает стиль подсветки синтаксиса"""
         palette = self.palette()
         palette.setColor(QPalette.ColorRole.Base, QColor(style["background"]))
+
+        font = QFont(style["font"]["family"], style["font"]["size"])
+        self.setFont(font)
+
         self.setPalette(palette)
         self.highlighter.set_style(style["tokens"])
 
