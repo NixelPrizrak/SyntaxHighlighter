@@ -71,7 +71,7 @@ class StyleSettings(QScrollArea):
         self.change_style(self.style_combo.currentText())
         self.setWidget(container)
 
-    def change_style(self, style_name):
+    def change_style(self, style_name: str):
         """Изменяет стиль подсветки"""
         self.update_enabled = False
         found_style = get_style_by_name(style_name)

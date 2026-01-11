@@ -1,4 +1,3 @@
-
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QColor, QMouseEvent
 from PyQt5.QtWidgets import (

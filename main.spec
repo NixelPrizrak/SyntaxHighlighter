@@ -2,11 +2,11 @@
 
 
 a = Analysis(
-    ['src\\syntax_highlighter\\main.py'],
+    ['src/syntax_highlighter/main.py'],
     pathex=[],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=['PyQt5.sip'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

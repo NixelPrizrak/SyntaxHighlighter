@@ -1,5 +1,13 @@
+from docx.shared import Pt, RGBColor
+from docx.text.paragraph import Paragraph
 from pygments.lexers import get_lexer_by_name
-from PyQt5.QtGui import QColor, QFont, QSyntaxHighlighter, QTextCharFormat
+from PyQt5.QtGui import (
+    QColor,
+    QFont,
+    QSyntaxHighlighter,
+    QTextCharFormat,
+    QTextCursor,
+)
 
 
 class Highlighter(QSyntaxHighlighter):
@@ -27,39 +35,35 @@ class Highlighter(QSyntaxHighlighter):
                 color = QColor(style_data["color"])
                 fmt.setForeground(color)
 
-            # Жирный
-            if style_data["bold"]:
-                fmt.setFontWeight(QFont.Weight.Bold)
+            fmt.setFontWeight(
+                QFont.Weight.Bold if style_data["bold"] else QFont.Weight.Normal
+            )
 
-            # Курсив
-            if style_data["italic"]:
-                fmt.setFontItalic(True)
+            fmt.setFontItalic(style_data["italic"])
 
             self.format_styles[token_type] = fmt
 
     def highlightBlock(self, text):
         """Подсвечивает блок текста"""
-        # Получаем лексер для языка
         lexer = get_lexer_by_name("python", stripall=False)
+        tokens = list(lexer.get_tokens(text))[0:-1]
 
-        # Лексический анализ текста
-        tokens = list(lexer.get_tokens(text))
+        cursor = QTextCursor(self.document())
 
-        # Применяем форматирование
-        position = 0
+        position = self.currentBlock().position()
         for token_type, value in tokens:
             length = len(value)
 
-            # Получаем формат из кэша или создаем новый
+            cursor.setPosition(position)
+            position += length
+            cursor.setPosition(position, QTextCursor.MoveMode.KeepAnchor)
+
             fmt = self.get_format_for_token(token_type)
 
-            # Применяем формат
             if length > 0 and fmt is not None:
-                self.setFormat(position, length, fmt)
+                cursor.mergeCharFormat(fmt)
 
-            position += length
-
-    def get_format_for_token(self, token_type):
+    def get_format_for_token(self, token_type) -> QTextCharFormat | None:
         """Получает формат для типа токена"""
         while token_type:
             if token_type in self.format_styles:
@@ -67,3 +71,27 @@ class Highlighter(QSyntaxHighlighter):
             token_type = token_type.parent
 
         return None
+
+    def get_word_format_block(
+        self, paragraph: Paragraph, text: str, font: QFont
+    ):
+        """Получает Word-форматирование для блока текста"""
+        lexer = get_lexer_by_name("python", stripall=False)
+        tokens = list(lexer.get_tokens(text))[0:-1]
+
+        for token_type, value in tokens:
+            run = paragraph.add_run(value)
+
+            fmt = self.get_format_for_token(token_type)
+
+            run.font.name = font.family()
+
+            run.font.size = Pt(font.pointSize())
+
+            if fmt is not None:
+                run.font.bold = fmt.fontWeight() == QFont.Weight.Bold
+                run.font.italic = fmt.fontItalic()
+                color = fmt.foreground().color()
+                run.font.color.rgb = RGBColor(
+                    color.red(), color.green(), color.blue()
+                )

@@ -1,18 +1,14 @@
 import sys
 
 from editor import CodeEditor
-from pygments import highlight
-from pygments.formatters.html import HtmlFormatter
-from pygments.lexers import get_lexer_by_name
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtGui import QColor, QFont, QPalette
 from PyQt5.QtWidgets import (
+    QAction,
     QApplication,
     QFileDialog,
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
-    QPushButton,
     QWidget,
 )
 from style import StyleSettings
@@ -24,26 +20,46 @@ class MainWindow(QMainWindow):
         self.initUI()
 
     def initUI(self):
-        self.setWindowTitle("Pygments Code Editor")
+        self.setWindowTitle("Syntax Highlighter")
         self.setGeometry(100, 100, 1200, 800)
 
-        # Центральный виджет
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+        main_layout = QHBoxLayout(main_widget)
 
-        # Основной layout
-        main_layout = QHBoxLayout(central_widget)
+        self.settings = StyleSettings()
+        self.settings.style_changed.connect(self.update_style)
+        main_layout.addWidget(self.settings)
+        menu = self.menuBar()
 
-        # Панель инструментов
-        self.toolbar = StyleSettings()
-        self.toolbar.style_changed.connect(self.update_style)
-        main_layout.addWidget(self.toolbar)
+        if menu is not None:
+            menu.setStyleSheet("""
+                QMenuBar {
+                    border: none;
+                    background-color: rgba(0, 0, 0, 0.3);
+                }
 
-        # Кнопка экспорта в HTML
-        export_btn = QPushButton("Экспорт в HTML", self)
-        export_btn.clicked.connect(self.export_to_html)
-        self.toolbar.add_separator()
-        self.toolbar.main_layout.addWidget(export_btn)
+                QMenuBar::item {
+                    padding: 8px 15px;
+                    font-weight: 400;
+                    border-radius: 6px;
+                }
+
+                QMenuBar::item:selected {
+                    background-color: rgba(0, 0, 0, 0.4);
+                }
+
+                QMenuBar::item:pressed {
+                    background-color: rgba(0, 0, 0, 0.5);
+                }
+            """)
+            file_menu = menu.addMenu("Файл")
+
+            if file_menu is not None:
+                # Кнопка экспорта в Word
+                export_btn = QAction("Экспорт в Word", self)
+                export_btn.triggered.connect(self.export_to_word)
+                file_menu.addAction(export_btn)
 
         # Редактор
         self.editor = CodeEditor()
@@ -51,34 +67,23 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.editor)
 
     def update_style(self):
-        self.editor.set_style(self.toolbar.get_style())
+        self.editor.set_style(self.settings.get_style())
 
-    def export_to_html(self):
-        """Экспорт для Word HTML с подсветкой"""
-        code = self.editor.toPlainText()
-        style = self.style_combo.currentText()
+    def export_to_word(self):
+        """Экспорт в Word"""
 
         try:
-            lexer = get_lexer_by_name("python")
-            formatter = HtmlFormatter(
-                style=style, full=True, linenos=True, cssclass="highlight"
-            )
+            doc = self.editor.toDocx()
 
-            html = highlight(code, lexer, formatter)
-
-            # Показываем диалог сохранения
             file_name, _ = QFileDialog.getSaveFileName(
                 self,
-                "Сохранить HTML",
-                f"code_python.html",
-                "HTML Files (*.html *.htm)",
+                "Сохранить",
+                f"code_python.docx",
+                "Документ Word (*.docx)",
             )
 
             if file_name:
-                with open(file_name, "w", encoding="utf-8") as f:
-                    f.write(html)
-
-                self.status_bar.showMessage(f"Файл сохранен: {file_name}", 3000)
+                doc.save(file_name)
 
         except Exception as e:
             QMessageBox.critical(
