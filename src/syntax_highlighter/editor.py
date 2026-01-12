@@ -6,12 +6,12 @@ from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 from docx.text.paragraph import Paragraph
 from highlighter import Highlighter
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QColor,
     QFont,
     QPalette,
 )
-from PyQt5.QtWidgets import QTextEdit
+from PyQt6.QtWidgets import QTextEdit
 
 
 class CodeEditor(QTextEdit):
@@ -47,9 +47,9 @@ class CodeEditor(QTextEdit):
 
     def createMimeDataFromSelection(self):
         mime_data = super().createMimeDataFromSelection()
+
         if mime_data is not None:
             html = mime_data.html()
-            text = mime_data.text()
 
             # Добавление цвета фона для текста
             palette = self.palette()
@@ -69,6 +69,7 @@ class CodeEditor(QTextEdit):
             html = html[:i] + "</p><p>" + html[i:]
 
             mime_data.setHtml(html)
+
         return mime_data
 
     def toDocx(self) -> DocumentObject:

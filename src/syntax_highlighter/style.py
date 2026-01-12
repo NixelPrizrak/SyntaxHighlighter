@@ -1,9 +1,9 @@
 from color_picker import ColorPicker
 from pygments.styles import get_all_styles, get_style_by_name
 from pygments.token import Token
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QColor, QFontDatabase, QPalette
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QFontDatabase, QPalette
+from PyQt6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFrame,
@@ -237,7 +237,7 @@ class StyleSettings(QScrollArea):
     def add_font_combo(self):
         """Добавляет комбобокс с доступными шрифтами"""
         self.font_combo = QComboBox()
-        fonts = set(QFontDatabase().families())
+        fonts = set(QFontDatabase.families())
         selected_fonts = (
             "monospace",
             "Cascadia Code",

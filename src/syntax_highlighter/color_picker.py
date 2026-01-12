@@ -1,6 +1,6 @@
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QColor, QMouseEvent
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QColor, QMouseEvent
+from PyQt6.QtWidgets import (
     QColorDialog,
     QHBoxLayout,
     QLabel,
@@ -49,7 +49,6 @@ class ColorPicker(QWidget):
             QColor(self.current_color),
             self,
             f"Выберите {self.label_text.lower()}",
-            QColorDialog.ShowAlphaChannel | QColorDialog.DontUseNativeDialog,
         )
 
         if color.isValid():

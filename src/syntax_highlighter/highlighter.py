@@ -1,7 +1,7 @@
 from docx.shared import Pt, RGBColor
 from docx.text.paragraph import Paragraph
 from pygments.lexers import get_lexer_by_name
-from PyQt5.QtGui import (
+from PyQt6.QtGui import (
     QColor,
     QFont,
     QSyntaxHighlighter,
