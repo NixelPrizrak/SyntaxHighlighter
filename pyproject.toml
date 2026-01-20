@@ -2,4 +2,4 @@
 name = "syntax-highlighter"
 version = "1.0.0"
 requires-python = ">=3.11"
-dependencies = ["pyqt6>=6.10", "pygments>=2.19", "pyinstaller>=6.17"]
+dependencies = ["pyqt6>=6.10", "pygments>=2.19", "pyinstaller>=6.17", "python-docx>=1.2"]

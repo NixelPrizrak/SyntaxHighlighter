@@ -17,12 +17,12 @@ from PyQt6.QtWidgets import QTextEdit
 class CodeEditor(QTextEdit):
     def __init__(self):
         super().__init__()
-
         # Подсветчик
         self.highlighter = Highlighter(self.document())
 
         # Загружаем пример кода
         self.load_example_code()
+        self.setAcceptRichText(False)
 
     def set_style(self, style: dict):
         """Устанавливает стиль подсветки синтаксиса"""
@@ -71,6 +71,15 @@ class CodeEditor(QTextEdit):
             mime_data.setHtml(html)
 
         return mime_data
+
+    def insertFromMimeData(self, source):
+        """Перехватываем вставку из буфера обмена"""
+        if source is None or not source.hasFormat("text/plain"):
+            return
+
+        text = source.text()
+        cursor = self.textCursor()
+        cursor.insertText(text)
 
     def toDocx(self) -> DocumentObject:
         """Конвертирует текст в Word документ"""

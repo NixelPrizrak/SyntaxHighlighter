@@ -48,7 +48,7 @@ class StyleSettings(QScrollArea):
         self.add_separator()
 
         # Общие
-        self.add_header_block("Общие настройки")
+        self.add_header_block("Текстовый редактор")
         self.bg_color = ColorPicker("Фон:")
         self.bg_color.color_changed.connect(self.update_style)
         self.main_layout.addWidget(
@@ -60,7 +60,6 @@ class StyleSettings(QScrollArea):
         self.classes = self.add_setting_block("Классы и модули")
         self.methods = self.add_setting_block("Функции")
         self.variables = self.add_setting_block("Переменные")
-        self.constants = self.add_setting_block("Константы")
         self.strings = self.add_setting_block("Строки")
         self.literals = self.add_setting_block("Другие литералы")
         self.names = self.add_setting_block("Прочие наименования")
@@ -108,12 +107,6 @@ class StyleSettings(QScrollArea):
                     "italic": self.keywords["italic"].isChecked(),
                     "bold": self.keywords["bold"].isChecked(),
                 },
-                # Типы
-                # Token.Keyword.Type: {
-                #     "color": self.comments["color"].get_color(),
-                #     "italic": self.comments["italic"].isChecked(),
-                #     "bold": self.comments["bold"].isChecked(),
-                # },
                 # Имена
                 Token.Name: {
                     "color": self.names["color"].get_color(),
@@ -143,12 +136,6 @@ class StyleSettings(QScrollArea):
                     "color": self.variables["color"].get_color(),
                     "italic": self.variables["italic"].isChecked(),
                     "bold": self.variables["bold"].isChecked(),
-                },
-                # Переменные
-                Token.Name.Constant: {
-                    "color": self.constants["color"].get_color(),
-                    "italic": self.constants["italic"].isChecked(),
-                    "bold": self.constants["bold"].isChecked(),
                 },
                 # Классы
                 Token.Name.Class: {
@@ -197,7 +184,6 @@ class StyleSettings(QScrollArea):
         self.set_style_block(style, self.classes, Token.Name.Class)
         self.set_style_block(style, self.methods, Token.Name.Function)
         self.set_style_block(style, self.variables, Token.Name.Variable)
-        self.set_style_block(style, self.constants, Token.Name.Constant)
         self.set_style_block(style, self.strings, Token.Literal.String)
         self.set_style_block(style, self.literals, Token.Literal)
         self.set_style_block(style, self.names, Token.Name)

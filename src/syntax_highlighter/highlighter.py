@@ -1,6 +1,7 @@
 from docx.shared import Pt, RGBColor
 from docx.text.paragraph import Paragraph
-from pygments.lexers import get_lexer_by_name
+from pygments.lexers.python import PythonLexer
+from pygments.token import Token
 from PyQt6.QtGui import (
     QColor,
     QFont,
@@ -45,13 +46,27 @@ class Highlighter(QSyntaxHighlighter):
 
     def highlightBlock(self, text):
         """Подсвечивает блок текста"""
-        lexer = get_lexer_by_name("python", stripall=False)
-        tokens = list(lexer.get_tokens(text))[0:-1]
+        if text is None:
+            return
+
+        lexer = PythonLexer()
+        tokens = list(lexer.get_tokens_unprocessed(text))
 
         cursor = QTextCursor(self.document())
 
         position = self.currentBlock().position()
-        for token_type, value in tokens:
+        for i in range(len(tokens)):
+            if (
+                tokens[i][1] == Token.Name
+                and len(tokens) > i + 1
+                and tokens[i + 1][2] == "("
+            ):
+                token_type = Token.Name.Function
+            else:
+                token_type = tokens[i][1]
+
+            value = tokens[i][2]
+
             length = len(value)
 
             cursor.setPosition(position)
@@ -76,10 +91,21 @@ class Highlighter(QSyntaxHighlighter):
         self, paragraph: Paragraph, text: str, font: QFont
     ):
         """Получает Word-форматирование для блока текста"""
-        lexer = get_lexer_by_name("python", stripall=False)
-        tokens = list(lexer.get_tokens(text))[0:-1]
+        lexer = PythonLexer()
+        tokens = list(lexer.get_tokens_unprocessed(text))
 
-        for token_type, value in tokens:
+        for i in range(len(tokens)):
+            if (
+                tokens[i][1] == Token.Name
+                and len(tokens) > i + 1
+                and tokens[i + 1][2] == "("
+            ):
+                token_type = Token.Name.Function
+            else:
+                token_type = tokens[i][1]
+
+            value = tokens[i][2]
+
             run = paragraph.add_run(value)
 
             fmt = self.get_format_for_token(token_type)
