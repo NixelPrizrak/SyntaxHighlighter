@@ -1,6 +1,7 @@
 import sys
 
 from editor import CodeEditor
+from PyQt6.QtCore import QLibraryInfo, QLocale, QTranslator
 from PyQt6.QtGui import QAction, QColor, QFont, QPalette
 from PyQt6.QtWidgets import (
     QApplication,
@@ -64,6 +65,7 @@ class MainWindow(QMainWindow):
         self.editor = CodeEditor()
         self.update_style()
         main_layout.addWidget(self.editor)
+        self.editor.text_changed()
 
     def update_style(self):
         self.editor.set_style(self.settings.get_style())
@@ -113,6 +115,18 @@ if __name__ == "__main__":
 
     # Устанавливаем шрифт
     app.setFont(QFont("Arial", 10))
+
+    # Создаем переводчик
+    translator = QTranslator()
+
+    # Загрузка системного перевода Qt
+    if translator.load(
+        QLocale(QLocale.Language.Russian),
+        "qtbase_",
+        "",
+        QLibraryInfo.path(QLibraryInfo.LibraryPath.TranslationsPath),
+    ):
+        app.installTranslator(translator)
 
     window = MainWindow()
     window.show()

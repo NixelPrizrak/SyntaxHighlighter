@@ -5,11 +5,14 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Inches, Pt, RGBColor
 from docx.text.paragraph import Paragraph
-from highlighter import Highlighter
+from pygments.lexers.python import PythonLexer
+from pygments.token import Token
 from PyQt6.QtGui import (
     QColor,
     QFont,
     QPalette,
+    QTextCharFormat,
+    QTextCursor,
 )
 from PyQt6.QtWidgets import QTextEdit
 
@@ -17,12 +20,51 @@ from PyQt6.QtWidgets import QTextEdit
 class CodeEditor(QTextEdit):
     def __init__(self):
         super().__init__()
-        # Подсветчик
-        self.highlighter = Highlighter(self.document())
-
-        # Загружаем пример кода
-        self.load_example_code()
         self.setAcceptRichText(False)
+        self.textChanged.connect(self.text_changed)
+        # Массив для стилей форматирования
+        self.format_styles = {}
+
+        # Загрузка примера кода
+        self.changed = True
+        self.load_example_code()
+        self.changed = False
+
+    def text_changed(self):
+        """Обновляет подсветку синтаксиса при изменении текста"""
+        if self.changed:
+            return
+        self.changed = True
+        lexer = PythonLexer()
+        tokens = list(lexer.get_tokens_unprocessed(self.toPlainText()))
+
+        cursor = QTextCursor(self.document())
+
+        position = 0
+        for i in range(len(tokens)):
+            if (
+                tokens[i][1] == Token.Name
+                and len(tokens) > i + 1
+                and tokens[i + 1][2] == "("
+            ):
+                token_type = Token.Name.Function
+            else:
+                token_type = tokens[i][1]
+
+            value = tokens[i][2]
+
+            length = len(value)
+
+            cursor.setPosition(position)
+            position += length
+            cursor.setPosition(position, QTextCursor.MoveMode.KeepAnchor)
+
+            fmt = self.get_format_for_token(token_type)
+
+            if length > 0 and fmt is not None:
+                cursor.mergeCharFormat(fmt)
+
+        self.changed = False
 
     def set_style(self, style: dict):
         """Устанавливает стиль подсветки синтаксиса"""
@@ -43,7 +85,38 @@ class CodeEditor(QTextEdit):
             self.setPlainText(current_text)
 
         self.setPalette(palette)
-        self.highlighter.set_style(style["tokens"])
+        self.build_format_styles(style["tokens"])
+        self.text_changed()
+
+    def build_format_styles(self, style: dict):
+        """Создает кэш форматов для быстрого доступа"""
+        self.format_styles = {}
+
+        # Создаем форматы для разных типов токенов
+        for token_type, style_data in style.items():
+            fmt = QTextCharFormat()
+
+            # Цвет текста
+            if style_data["color"]:
+                color = QColor(style_data["color"])
+                fmt.setForeground(color)
+
+            fmt.setFontWeight(
+                QFont.Weight.Bold if style_data["bold"] else QFont.Weight.Normal
+            )
+
+            fmt.setFontItalic(style_data["italic"])
+
+            self.format_styles[token_type] = fmt
+
+    def get_format_for_token(self, token_type) -> QTextCharFormat | None:
+        """Получает формат для типа токена"""
+        while token_type:
+            if token_type in self.format_styles:
+                return self.format_styles[token_type]
+            token_type = token_type.parent
+
+        return None
 
     def createMimeDataFromSelection(self):
         mime_data = super().createMimeDataFromSelection()
@@ -94,6 +167,7 @@ class CodeEditor(QTextEdit):
         section.left_margin = Inches(0.5)
         section.right_margin = Inches(0.5)
 
+        position = 0
         for line in lines:
             paragraph = doc.add_paragraph("")
             paragraph.paragraph_format.line_spacing = 1.0
@@ -108,7 +182,8 @@ class CodeEditor(QTextEdit):
                 RGBColor(bg_color.red(), bg_color.green(), bg_color.blue()),
             )
 
-            self.highlighter.get_word_format_block(paragraph, line, font)
+            self.get_word_format_block(paragraph, line, position, font)
+            position += len(line) + 1
 
         return doc
 
@@ -126,6 +201,36 @@ class CodeEditor(QTextEdit):
 
         # Добавляем элемент заливки к форматированию параграфа
         pPr.append(shd)
+
+    def get_word_format_block(
+        self, paragraph: Paragraph, text: str, position: int, font: QFont
+    ):
+        """Получает Word-форматирование для блока текста"""
+        cursor = QTextCursor(self.document())
+
+        for i in range(len(text)):
+            run = paragraph.add_run(text[i])
+
+            cursor.setPosition(position)
+            cursor.movePosition(
+                QTextCursor.MoveOperation.Right,
+                QTextCursor.MoveMode.KeepAnchor,
+                1,
+            )
+            position += 1
+            fmt = cursor.charFormat()
+
+            run.font.name = font.family()
+
+            run.font.size = Pt(font.pointSize())
+
+            if fmt is not None:
+                run.font.bold = fmt.fontWeight() == QFont.Weight.Bold
+                run.font.italic = fmt.fontItalic()
+                color = fmt.foreground().color()
+                run.font.color.rgb = RGBColor(
+                    color.red(), color.green(), color.blue()
+                )
 
     def load_example_code(self):
         """Загружает пример кода"""
