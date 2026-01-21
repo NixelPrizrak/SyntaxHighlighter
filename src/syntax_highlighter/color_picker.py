@@ -48,7 +48,7 @@ class ColorPicker(QWidget):
         color = QColorDialog.getColor(
             QColor(self.current_color),
             self,
-            f"Выберите {self.label_text.lower()}",
+            "Выберите цвет",
         )
 
         if color.isValid():

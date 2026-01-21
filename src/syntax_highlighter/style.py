@@ -72,6 +72,9 @@ class StyleSettings(QScrollArea):
 
     def change_style(self, style_name: str):
         """Изменяет стиль подсветки"""
+        if style_name == "":
+            return
+
         self.update_enabled = False
         found_style = get_style_by_name(style_name)
         style = {"background": found_style.background_color, "tokens": {}}
@@ -80,10 +83,17 @@ class StyleSettings(QScrollArea):
 
         self.set_style(style)
         self.update_enabled = True
-        self.update_style()
+        self.update_style(None, True)
 
-    def update_style(self):
+    def update_style(self, e=None, is_changed_style: bool = False):
         if self.update_enabled:
+            empty_style = self.style_combo.findText("")
+            if not is_changed_style and empty_style == -1:
+                self.style_combo.insertItem(0, "")
+                self.style_combo.setCurrentText("")
+            elif is_changed_style and empty_style > -1:
+                self.style_combo.removeItem(empty_style)
+
             self.style_changed.emit()
 
     def get_style(self):

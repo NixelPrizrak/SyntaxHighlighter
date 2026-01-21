@@ -154,7 +154,7 @@ class CodeEditor(QTextEdit):
         cursor = self.textCursor()
         cursor.insertText(text)
 
-    def toDocx(self) -> DocumentObject:
+    def to_docx(self) -> DocumentObject:
         """Конвертирует текст в Word документ"""
         lines = self.toPlainText().splitlines()
         bg_color = self.palette().color(QPalette.ColorRole.Base)

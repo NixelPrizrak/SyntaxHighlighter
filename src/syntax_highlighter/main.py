@@ -17,9 +17,7 @@ from style import StyleSettings
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.initUI()
 
-    def initUI(self):
         self.setWindowTitle("Syntax Highlighter")
         self.setGeometry(100, 100, 1200, 800)
 
@@ -74,7 +72,7 @@ class MainWindow(QMainWindow):
         """Экспорт в Word"""
 
         try:
-            doc = self.editor.toDocx()
+            doc = self.editor.to_docx()
 
             file_name, _ = QFileDialog.getSaveFileName(
                 self,
