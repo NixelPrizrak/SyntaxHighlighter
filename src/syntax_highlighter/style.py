@@ -43,14 +43,14 @@ class StyleSettings(QScrollArea):
         self.font_size = QSpinBox()
         self.font_size.setRange(8, 50)
         self.font_size.setValue(12)
-        self.font_size.valueChanged.connect(self.update_style)
+        self.font_size.valueChanged.connect(self.change_main_setting)
         self.main_layout.addWidget(self.font_size)
         self.add_separator()
 
         # Общие
         self.add_header_block("Текстовый редактор")
         self.bg_color = ColorPicker("Фон:")
-        self.bg_color.color_changed.connect(self.update_style)
+        self.bg_color.color_changed.connect(self.change_main_setting)
         self.main_layout.addWidget(
             self.bg_color, alignment=Qt.AlignmentFlag.AlignHCenter
         )
@@ -83,16 +83,25 @@ class StyleSettings(QScrollArea):
 
         self.set_style(style)
         self.update_enabled = True
-        self.update_style(None, True)
+        self.update_style(is_changed_style=True)
 
-    def update_style(self, e=None, is_changed_style: bool = False):
+    def change_main_setting(self):
+        self.update_style(is_main_setting=True)
+
+    def update_style(
+        self,
+        e=None,
+        is_changed_style: bool = False,
+        is_main_setting: bool = False,
+    ):
         if self.update_enabled:
             empty_style = self.style_combo.findText("")
-            if not is_changed_style and empty_style == -1:
-                self.style_combo.insertItem(0, "")
-                self.style_combo.setCurrentText("")
-            elif is_changed_style and empty_style > -1:
-                self.style_combo.removeItem(empty_style)
+            if not is_main_setting:
+                if not is_changed_style and empty_style == -1:
+                    self.style_combo.insertItem(0, "")
+                    self.style_combo.setCurrentText("")
+                elif is_changed_style and empty_style > -1:
+                    self.style_combo.removeItem(empty_style)
 
             self.style_changed.emit()
 
@@ -241,7 +250,6 @@ class StyleSettings(QScrollArea):
             "Consolas",
             "Lucida Console",
             "Courier New",
-            "DejaVu Sans Mono",
             "Liberation Mono",
             "Noto Mono",
             "FreeMono",
@@ -251,7 +259,7 @@ class StyleSettings(QScrollArea):
             if font in fonts:
                 self.font_combo.addItem(font)
 
-        self.font_combo.currentTextChanged.connect(self.update_style)
+        self.font_combo.currentTextChanged.connect(self.change_main_setting)
         self.main_layout.addWidget(self.font_combo)
 
     def add_separator(self):
