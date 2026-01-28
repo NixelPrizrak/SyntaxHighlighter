@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
 
-    # Устанавливаем темную тему приложения
+    # Настройка оформления приложения
     app.setStyle("Fusion")
     dark_palette = QPalette()
     dark_palette.setColor(QPalette.ColorRole.Window, QColor(53, 53, 53))
@@ -111,13 +111,9 @@ if __name__ == "__main__":
     dark_palette.setColor(QPalette.ColorRole.HighlightedText, QColor(0, 0, 0))
     app.setPalette(dark_palette)
 
-    # Устанавливаем шрифт
     app.setFont(QFont("Arial", 10))
 
-    # Создаем переводчик
     translator = QTranslator()
-
-    # Загрузка системного перевода Qt
     if translator.load(
         QLocale(QLocale.Language.Russian),
         "qtbase_",

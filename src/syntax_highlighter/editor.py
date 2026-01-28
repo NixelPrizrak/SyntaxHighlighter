@@ -234,81 +234,55 @@ class CodeEditor(QTextEdit):
 
     def load_example_code(self):
         """Загружает пример кода"""
-        example_code = '''# Пример Python кода с различными конструкциями
-import sys
-from typing import List, Optional, Dict
+        example_code = '''class SimpleCalculator:
+    """Простой калькулятор"""
 
-class Person:
-    """Класс, представляющий человека"""
+    def __init__(self):
+        self.value = 0
+        self.operations = []
 
-    def __init__(self, name: str, age: int):
-        self.name = name
-        self.age = age
-        self._friends: List['Person'] = []
+    def calculate(self, operation: str, x: float, y: float = None) -> float:
+        """Выполнить вычисление"""
 
-    def greet(self) -> str:
-        """Возвращает приветствие"""
-        return f"Привет, меня зовут {self.name}"
+        # Условный оператор с разными ветками
+        if operation == "add":
+            result = x + y
+        elif operation == "multiply":
+            result = x * y
+        elif operation == "power":
+            result = x ** y
+        elif operation == "sqrt":
+            # Условное выражение для обработки отрицательных чисел
+            result = math.sqrt(x) if x >= 0 else -1
+        else:
+            result = x  # Возвращаем значение по умолчанию
 
-    def add_friend(self, friend: 'Person') -> None:
-        """Добавляет друга"""
-        if friend not in self._friends:
-            self._friends.append(friend)
+        # Добавление элемента в список
+        self.operations.append(f"{operation}: {x},{y if y else ''} = {result}")
 
-    @property
-    def friend_count(self) -> int:
-        """Количество друзей"""
-        return len(self._friends)
+        # Тернарный оператор для установки значения
+        self.value = result if result > 0 else 0
 
-    @classmethod
-    def create_child(cls, name: str) -> 'Person':
-        """Создает ребенка"""
-        return cls(name, 0)
-
-def calculate_statistics(numbers: List[float]) -> Dict[str, float]:
-    """Вычисляет статистические показатели"""
-    if not numbers:
-        return {}
-
-    total = sum(numbers)
-    average = total / len(numbers)
-    maximum = max(numbers)
-    minimum = min(numbers)
-
-    return {
-        'total': total,
-        'average': average,
-        'max': maximum,
-        'min': minimum
-    }
-
-# Декоратор для логирования
-def log_execution(func):
-    def wrapper(*args, **kwargs):
-        print(f"Выполняется {func.__name__}")
-        result = func(*args, **kwargs)
-        print(f"{func.__name__} завершена")
         return result
-    return wrapper
 
-@log_execution
-def process_data(data: List[int]) -> List[int]:
-    """Обрабатывает данные"""
-    return [x * 2 for x in data if x > 0]
+    def show_history(self):
+        """Показать историю операций"""
+        for i, op in enumerate(self.operations, 1):
+            print(f"{i}. {op}")
 
-# Использование
+
 if __name__ == "__main__":
-    person = Person("Анна", 25)
-    print(person.greet())
+    import math
 
-    child = Person.create_child("Максим")
-    person.add_friend(child)
+    calc = SimpleCalculator()
 
-    data = [1, -2, 3, 4, -5]
-    processed = process_data(data)
-    print(f"Обработанные данные: {processed}")
+    print("Вычисления:")
+    print(f"Сложение: {calc.calculate('add', 5, 3)}")
+    print(f"Умножение: {calc.calculate('multiply', 4, 2)}")
+    print(f"Возведение в степень: {calc.calculate('power', 2, 3)}")
+    print(f"Квадратный корень: {calc.calculate('sqrt', 9)}")
 
-    stats = calculate_statistics([10.5, 20.3, 15.7])
-    print(f"Статистика: {stats}")'''
+    print("История операций:")
+    calc.show_history()'''
 
         self.setPlainText(example_code)
